@@ -19,11 +19,16 @@ class Account {
     this.accountName = accountName;
     this.secretKey = secretKey;
     this.onUpdate = onUpdate;
-    this.countdowns = 30;
+    this.countdowns = this.calculateCountdown();
     this.timer = setInterval(this.updateCountdown.bind(this), 1000);
     this.token = this.generateToken();
     this.isEditing = false;
     this.issuer = issuer;
+  }
+
+  calculateCountdown() {
+    const currentTime = Math.floor(Date.now() / 1000);
+    return 30 - (currentTime % 30);
   }
 
   generateToken() {
