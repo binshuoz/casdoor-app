@@ -1,19 +1,42 @@
-name: EAS Build
+name: EAS Build and Release
 
 on:
   workflow_dispatch:
   push:
     branches:
       - master
-    paths:
-      - "*.js"
-      - "package.json"
-      - "eas.json"
-      - "app.json"
+  pull_request:
+    branches:
+      - master
+
+env:
+  build: development
 
 jobs:
-  build:
-    name: Install and build
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: npm
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Build on Locally
+        run: eas build --profile $build --platform ios --non-interactive --no-wait --local
+      - name: Upload ios build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: casdoor-app-ios
+          path: dist/*.dmg
+
+  build-android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,12 +51,16 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
       - name: Install dependencies
         run: npm ci
-
-      - name: Build on EAS
-        run: eas build --platform all --non-interactive --no-wait
+      - name: Build on Locally
+        run: eas build --profile $build --platform android --non-interactive --no-wait --local
+      - name: Upload android build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: casdoor-app-android
+          path: dist/*.dmg
 
   semantic-release:
-    needs: [build]
+    needs: [build-android, build-ios]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

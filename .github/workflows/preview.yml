@@ -1,3 +1,5 @@
+name: EXPO Preview
+
 on:
     pull_request:
       paths:
