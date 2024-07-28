@@ -1,5 +1,10 @@
-on: [pull_request]
-
+on:
+    pull_request:
+      paths:
+        - '*.js'       
+        - 'package.json'
+        - 'eas.json'
+        - 'app.json'
 jobs:
   preview:
     runs-on: ubuntu-latest

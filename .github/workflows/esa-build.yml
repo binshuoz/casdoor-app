@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '*.js'       
+      - 'package.json'
+      - 'eas.json'
+      - 'app.json'
+
 jobs:
   build:
     name: Install and build

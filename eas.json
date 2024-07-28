@@ -37,7 +37,8 @@
     },
     "production": {
       "extends": "base",
-      "channel": "production"
+      "channel": "production",
+      "autoIncrement": true
     }
   },
   "submit": {
