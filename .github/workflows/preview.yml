@@ -5,6 +5,8 @@ on:
         - 'package.json'
         - 'eas.json'
         - 'app.json'
+        - '.github/workflows/preview.yml'
+
 jobs:
   preview:
     runs-on: ubuntu-latest
@@ -30,8 +32,6 @@ jobs:
       - name: 🚀 Create preview
         uses: expo/expo-github-action/preview@v8
         with:
-          # `github.event.pull_request.head.ref` is only available on `pull_request` triggers.
-          # Use your own, or keep the automatically infered branch name from `--auto`, when using different triggers.
           command: eas update --auto --branch ${{ github.event.pull_request.head.ref }}
           comment: true
           qr-target: 'expo-go'
