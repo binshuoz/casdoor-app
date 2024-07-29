@@ -20,7 +20,6 @@
         "withoutCredentials": true
       },
       "ios": {
-        "simulator": true,
         "buildConfiguration": "Debug"
       }
     },
