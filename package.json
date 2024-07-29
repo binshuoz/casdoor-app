@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "release": "npx -p semantic-release -p @semantic-release/git -p @semantic-release/changelog -p @semantic-release/exec semantic-release"
   },
   "dependencies": {
     "@react-native-community/netinfo": "11.3.1",
@@ -33,6 +34,34 @@
     "react-native-webview": "13.8.6",
     "totp-generator": "^0.0.14",
     "expo-dev-client": "~4.0.20"
+  },
+  "release": {
+    "branches": [
+      "master"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "dist/macos/*.dmg",
+              "label": "macOS"
+            },
+            {
+              "path": "dist/windows/*.exe",
+              "label": "Windows"
+            },
+            {
+              "path": "dist/linux/*.AppImage",
+              "label": "Linux"
+            }
+          ]
+        }
+      ]
+    ]
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

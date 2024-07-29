@@ -5,10 +5,12 @@
   "build": {
     "base": {
       "android": {
-        "image": "latest"
+        "image": "latest",
+        "buildType": "apk"
       },
       "ios": {
-        "image": "latest"
+        "image": "latest",
+        "simulator": true
       }
     },
     "development": {
@@ -20,7 +22,6 @@
         "withoutCredentials": true
       },
       "ios": {
-        "simulator": true,
         "buildConfiguration": "Debug"
       }
     },
@@ -28,9 +29,6 @@
       "extends": "base",
       "channel": "preview",
       "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
       "ios": {
         "simulator": true
       }

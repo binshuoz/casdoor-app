@@ -9,54 +9,25 @@ on:
     branches:
       - master
 
-env:
-  build: development
-
 jobs:
-  build-ios:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18.x
-          cache: npm
-      - name: Setup Expo and EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-      - name: Install dependencies
-        run: npm ci
-      - name: Build on Locally
-        run: eas build --profile $build --platform ios --no-wait --non-interactive --local
-      - name: Archive ipa
-        run: |
-          cd ios
-          mkdir -p build/Payload
-          mv $(find . -name "*.app" | head -n 1) build/Payload/casdoorapp.app
-          cd build
-          zip -r casdoorapp.ipa Payload/
-  
-      - name: Upload ios build artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: casdoor-app-ios-$build
-          path: casdoorapp.ipa
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        build: [development, production]
+        include:
+          - os: macos-latest
+            platform: ios
+          - os: ubuntu-latest
+            platform: android
 
-  build-android:
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: npm
-      - name: set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          java-version: 21
-          distribution: temurin
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
@@ -64,22 +35,67 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
       - name: Install dependencies
         run: npm ci
-      - name: Build on Locally
-        run: eas build --profile $build --platform android --no-wait --non-interactive --local
-      - name: Upload android build artifacts
+      - name: Build Locally
+        run: eas build --profile ${{ matrix.build }} --platform ${{ matrix.platform }} --no-wait --non-interactive --local
+
+      - name: Archive and Upload iOS build artifacts
+        if: matrix.platform == 'ios'
+        run: |
+          tar -xzvf build-*.tar.gz
+          mkdir -p Payload
+          mv $(find . -name "*.app" | head -n 1) Payload/casdoorapp.app
+          zip -r casdoorapp.ipa Payload/
+      - uses: actions/upload-artifact@v2
+        if: matrix.platform == 'ios'
+        with:
+          name: casdoor-app-ios-${{ matrix.build }}
+          path: build/casdoorapp.ipa
+
+      - name: Upload Android build artifacts
+        if: matrix.platform == 'android'
         uses: actions/upload-artifact@v2
         with:
-          name: casdoor-app-android-$build
+          name: casdoor-app-android-${{ matrix.build }}
           path: build-*.apk
 
   semantic-release:
-    needs: [build-android, build-ios]
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+      - name: Create Release Directory
+        run: mkdir -p release
+
+      - name: Download iOS build artifacts (development)
+        uses: actions/download-artifact@v2
+        with:
+          name: casdoor-app-ios-development
+          path: release/ios/development
+
+      - name: Download iOS build artifacts (production)
+        uses: actions/download-artifact@v2
+        with:
+          name: casdoor-app-ios-production
+          path: release/ios/production
+
+      - name: Download Android build artifacts (development)
+        uses: actions/download-artifact@v2
+        with:
+          name: casdoor-app-android-development
+          path: release/android/development
+
+      - name: Download Android build artifacts (production)
+        uses: actions/download-artifact@v2
+        with:
+          name: casdoor-app-android-production
+          path: release/android/production
+
       - name: Run semantic-release
-        run: |
-          npm install --save-dev semantic-release@17.2.4
-          npx semantic-release
+        run: npm run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
