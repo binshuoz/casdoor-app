@@ -5,9 +5,21 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '*.js'       
+      - 'package.json'
+      - 'eas.json'
+      - 'app.json'
+      - '.github/workflows/release.yml'
   pull_request:
     branches:
       - master
+    paths:
+      - '*.js'       
+      - 'package.json'
+      - 'eas.json'
+      - 'app.json'
+      - '.github/workflows/release.yml'
 
 jobs:
   build:
@@ -83,25 +95,25 @@ jobs:
       - name: Download iOS build artifacts (development)
         uses: actions/download-artifact@v4
         with:
-          name: casdoor-app-ios-development
+          name: casdoor-app-ios-development.ipa
           path: release/ios/development
 
       - name: Download iOS build artifacts (production)
         uses: actions/download-artifact@v4
         with:
-          name: casdoor-app-ios-production
+          name: casdoor-app-ios-production.ipa
           path: release/ios/production
 
       - name: Download Android build artifacts (development)
         uses: actions/download-artifact@v4
         with:
-          name: casdoor-app-android-development
+          name: casdoor-app-android-development.apk
           path: release/android/development
 
       - name: Download Android build artifacts (production)
         uses: actions/download-artifact@v4
         with:
-          name: casdoor-app-android-production
+          name: casdoor-app-android-production.apk
           path: release/android/production
 
       - name: Run semantic-release
