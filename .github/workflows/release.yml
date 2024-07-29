@@ -23,14 +23,16 @@ jobs:
             platform: android
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Setup JDK 21
         if: matrix.platform == 'android'
         uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
           java-version: '21'
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: npm
@@ -44,25 +46,26 @@ jobs:
       - name: Build Locally
         run: eas build --profile ${{ matrix.build }} --platform ${{ matrix.platform }} --no-wait --non-interactive --local
 
-      - name: Archive and Upload iOS build artifacts
+      - name: Archive iOS build artifacts
         if: matrix.platform == 'ios'
         run: |
           tar -xzvf build-*.tar.gz
           mkdir -p Payload
           mv $(find . -name "*.app" | head -n 1) Payload/casdoorapp.app
           zip -r casdoorapp.ipa Payload/
-      - uses: actions/upload-artifact@v2
+      - name: Upload iOS build artifacts
+        uses: actions/upload-artifact@v2
         if: matrix.platform == 'ios'
         with:
           name: casdoor-app-ios-${{ matrix.build }}
-          path: build/casdoorapp.ipa
+          path: casdoorapp.ipa
 
       - name: Upload Android build artifacts
         if: matrix.platform == 'android'
         uses: actions/upload-artifact@v2
         with:
           name: casdoor-app-android-${{ matrix.build }}
-          path: build-*.apk
+          path: $(find . -name "*.apk" | head -n 1)
 
   semantic-release:
     needs: build

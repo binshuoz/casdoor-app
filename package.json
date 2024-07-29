@@ -47,16 +47,20 @@
         {
           "assets": [
             {
-              "path": "dist/macos/*.dmg",
-              "label": "macOS"
+              "path": "release/ios/development/*.ipa",
+              "label": "iOS Development"
             },
             {
-              "path": "dist/windows/*.exe",
-              "label": "Windows"
+              "path": "release/ios/production/*.ipa",
+              "label": "iOS Production"
             },
             {
-              "path": "dist/linux/*.AppImage",
-              "label": "Linux"
+              "path": "release/android/development/*.apk",
+              "label": "Android Development"
+            },
+            {
+              "path": "release/android/production/*.apk",
+              "label": "Android Production"
             }
           ]
         }
