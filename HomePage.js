@@ -17,6 +17,7 @@ import {Dimensions, FlatList, RefreshControl, TouchableOpacity, View} from "reac
 import {Divider, IconButton, List, Modal, Portal, Text} from "react-native-paper";
 import {GestureHandlerRootView, Swipeable} from "react-native-gesture-handler";
 import {CountdownCircleTimer} from "react-native-countdown-circle-timer";
+import Toast from "react-native-root-toast";
 
 import SearchBar from "./SearchBar";
 import EnterAccountDetails from "./EnterAccountDetails";
@@ -66,6 +67,8 @@ export default function HomePage() {
           onUpdate
         ));
         setAccountList(newAccountList);
+      } else if (syncedAccounts.error) {
+        Toast.show(syncedAccounts.error, {position: -80});
       }
     } finally {
       isSyncing.current = false;

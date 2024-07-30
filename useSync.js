@@ -78,7 +78,7 @@ const useSync = (userInfo, token, casdoorServer) => {
   }, []);
 
   const syncAccounts = useCallback(async() => {
-    if (!canSync) {return {success: false, error: "Cannot sync"};}
+    if (!canSync) {return {success: false};}
 
     try {
       const {mfaAccounts: serverAccountList} = await api.getMfaAccounts(
@@ -89,7 +89,7 @@ const useSync = (userInfo, token, casdoorServer) => {
       );
 
       if (!serverAccountList) {
-        return {success: false, error: "Failed to get accounts"};
+        return {success: false, error: "Failed to get accounts, make sure you have enabled MFA on casdoor"};
       }
 
       if (toSyncData.length === 0) {
