@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "release": "npx -p semantic-release -p @semantic-release/git -p @semantic-release/changelog -p @semantic-release/exec semantic-release"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -38,7 +39,44 @@
     "react-native-svg": "15.2.0",
     "react-native-web": "~0.19.6",
     "react-native-webview": "13.8.6",
-    "totp-generator": "^0.0.14"
+    "totp-generator": "^0.0.14",
+    "expo-dev-client": "~4.0.20"
+  },
+  "release": {
+    "branches": [
+      "master"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "release/ios/casdoor-app-ios-development.ipa",
+              "label": "iOS Development",
+              "name": "casdoor-app-ios-development.ipa"
+            },
+            {
+              "path": "release/ios/casdoor-app-ios-production.ipa",
+              "label": "iOS Production",
+              "name": "casdoor-app-ios-production.ipa"
+            },
+            {
+              "path": "release/android/casdoor-app-android-development.apk",
+              "label": "Android Development",
+              "name": "casdoor-app-android-development.apk"
+            },
+            {
+              "path": "release/android/casdoor-app-android-production.apk",
+              "label": "Android Production",
+              "name": "casdoor-app-android-production.apk"
+            }
+          ]
+        }
+      ]
+    ]
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
