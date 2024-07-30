@@ -22,6 +22,37 @@ export const SYNC_STATUS = {
   DELETE: "delete",
 };
 
+const preMergeSyncData = (toSyncData) => {
+  return toSyncData.reduce((mergedData, currentItem) => {
+    const existingItemIndex = mergedData.findIndex(
+      item => item.data.accountName === currentItem.data.accountName
+        && item.data.secretKey === currentItem.data.secretKey
+        && item.data.issuer === currentItem.data.issuer
+    );
+
+    if (existingItemIndex !== -1) {
+      const existingItem = mergedData[existingItemIndex];
+      switch (currentItem.status) {
+      case SYNC_STATUS.EDIT:
+        mergedData[existingItemIndex] = {
+          ...existingItem,
+          ...currentItem,
+          data: {...existingItem.data, ...currentItem.data},
+        };
+        break;
+      case SYNC_STATUS.DELETE:
+        mergedData.splice(existingItemIndex, 1);
+        break;
+      default:
+        break;
+      }
+    } else {
+      mergedData.push(currentItem);
+    }
+    return mergedData;
+  }, []);
+};
+
 const applySync = (serverAccountList, toSyncData) => {
   return toSyncData.reduce((acc, syncItem) => {
     switch (syncItem.status) {
@@ -66,7 +97,7 @@ const useSync = (userInfo, token, casdoorServer) => {
   }, []);
 
   const addToSyncData = useCallback((toSyncAccount, status, newAccountName = null) => {
-    setToSyncData([...toSyncData, {
+    setToSyncData(preMergeSyncData([...toSyncData, {
       data: {
         accountName: toSyncAccount.accountName,
         issuer: toSyncAccount.issuer,
@@ -74,7 +105,7 @@ const useSync = (userInfo, token, casdoorServer) => {
       },
       status,
       newAccountName: newAccountName || "",
-    }]);
+    }]));
   }, []);
 
   const syncAccounts = useCallback(async() => {
