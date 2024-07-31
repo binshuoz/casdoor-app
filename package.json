@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "release": "npx -p semantic-release-expo -p semantic-release -p @semantic-release/git -p @semantic-release/changelog -p @semantic-release/exec semantic-release"
   },
   "dependencies": {
     "@react-native-community/netinfo": "11.3.1",
@@ -33,17 +34,62 @@
     "react-native-webview": "13.8.6",
     "totp-generator": "^0.0.14"
   },
-  "devDependencies": {
-    "@babel/core": "^7.24.0",
-    "@babel/eslint-parser": "^7.18.9",
-    "@babel/preset-react": "^7.18.6",
-    "@types/react": "~18.2.79",
-    "@types/react-native": "^0.72.2",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "eslint": "8.22.0",
-    "eslint-import-resolver-babel-module": "^5.3.2",
-    "eslint-plugin-react": "^7.31.1",
-    "eslint-plugin-unused-imports": "^2.0.0"
-  },
-  "private": true
-}
+    "verifyConditions": [
+      "semantic-release-expo",
+      "@semantic-release/changelog",
+      "@semantic-release/git"
+    ],
+    "release": {
+      "branches": [
+        "master"
+      ],
+      "plugins": [
+        [
+          "semantic-release-expo",
+          {
+            "versions": {
+              "version": "${next.raw}",
+              "android": "${code}",
+              "ios": "${next.raw}"
+            }
+          }
+        ],
+        "@semantic-release/commit-analyzer",
+        "@semantic-release/release-notes-generator",
+        [
+          "@semantic-release/git",
+          {
+            "assets": [
+              "package.json",
+              "app.json"
+            ],
+            "message": "chore(release): ${nextRelease.version} [skip ci]"
+          }
+        ],
+        [
+          "@semantic-release/github",
+          {
+            "assets": [
+              {
+                "path": "release/android/*.apk",
+                "label": "Android"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    "devDependencies": {
+      "@babel/core": "^7.24.0",
+      "@babel/eslint-parser": "^7.18.9",
+      "@babel/preset-react": "^7.18.6",
+      "@types/react": "~18.2.79",
+      "@types/react-native": "^0.72.2",
+      "@typescript-eslint/eslint-plugin": "^5.62.0",
+      "eslint": "8.22.0",
+      "eslint-import-resolver-babel-module": "^5.3.2",
+      "eslint-plugin-react": "^7.31.1",
+      "eslint-plugin-unused-imports": "^2.0.0"
+    },
+    "private": true
+  }
