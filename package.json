@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "release": "npx -p semantic-release -p @semantic-release/git -p @semantic-release/changelog -p @semantic-release/exec semantic-release"
+    "release": "npx -p semantic-release-expo -p semantic-release -p @semantic-release/git -p @semantic-release/changelog -p @semantic-release/exec semantic-release"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -42,6 +42,29 @@
     "totp-generator": "^0.0.14",
     "expo-dev-client": "~4.0.20"
   },
+  "verifyConditions": [
+    "semantic-release-expo",
+    "@semantic-release/changelog",
+    "@semantic-release/git"
+  ],
+  "prepare": [
+    {
+      "path": "semantic-release-expo",
+      "versions": {
+        "version": "${next.raw}",
+        "android": "${code}",
+        "ios": "${next.raw}"
+      }
+    },
+    {
+      "path": "@semantic-release/git",
+      "assets": [
+        "package.json",
+        "package-lock.json",
+        "app.json"
+      ]
+    }
+  ],
   "release": {
     "branches": [
       "master"
@@ -54,30 +77,21 @@
         {
           "assets": [
             {
-              "path": "release/ios/casdoor-app-ios-development.ipa",
-              "label": "iOS Development",
-              "name": "casdoor-app-ios-development.ipa"
+              "path": "release/ios/*.ipa",
+              "label": "iOS"
             },
             {
-              "path": "release/ios/casdoor-app-ios-production.ipa",
-              "label": "iOS Production",
-              "name": "casdoor-app-ios-production.ipa"
-            },
-            {
-              "path": "release/android/casdoor-app-android-development.apk",
-              "label": "Android Development",
-              "name": "casdoor-app-android-development.apk"
-            },
-            {
-              "path": "release/android/casdoor-app-android-production.apk",
-              "label": "Android Production",
-              "name": "casdoor-app-android-production.apk"
+              "path": "release/android/*.apk",
+              "label": "Android"
             }
           ]
         }
       ]
     ]
   },
+  "publish": false,
+  "success": false,
+  "fail": false,
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@babel/eslint-parser": "^7.18.9",
