@@ -16,14 +16,16 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zzbs.casdoorapp"
+      "bundleIdentifier": "com.zzbs.casdoorapp",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.zzbs.casdoorapp"
+      "package": "com.zzbs.casdoorapp",
+      "versionCode": 0
     },
     "web": {
       "favicon": "./assets/favicon.png"
