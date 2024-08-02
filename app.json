@@ -17,7 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zzbs.casdoorapp",
+      "bundleIdentifier": "org.casdoor.casdoorapp",
       "buildNumber": "1.0.0"
     },
     "android": {
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.zzbs.casdoorapp",
+      "package": "org.casdoor.casdoorapp",
       "versionCode": 1
     },
     "web": {
@@ -33,7 +33,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "d0ddea88-9be6-46db-8aa5-ea6d80cef527"
+        "projectId": "c02d2dfe-dd43-46ff-8a3e-e384fbc95b1d"
       }
     },
     "plugins": [
@@ -46,6 +46,6 @@
         }
       ]
     ],
-    "owner": "zzbs"
+    "owner": "casdoor"
   }
 }
