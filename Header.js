@@ -13,15 +13,17 @@
 // limitations under the License.
 
 import * as React from "react";
-import {Platform, StyleSheet, View} from "react-native";
+import {Alert, Platform, StyleSheet, View} from "react-native";
 import {Appbar, Avatar, Menu, Text, TouchableRipple} from "react-native-paper";
 import UserContext from "./UserContext";
 import CasdoorLoginPage, {CasdoorLogout} from "./CasdoorLoginPage";
+import useSyncStore from "./useSyncStore";
 
 const Header = () => {
   const {userInfo, setUserInfo, setToken} = React.useContext(UserContext);
   const [showLoginPage, setShowLoginPage] = React.useState(false);
   const [menuVisible, setMenuVisible] = React.useState(false);
+  const syncError = useSyncStore(state => state.syncError);
 
   const openMenu = () => setMenuVisible(true);
   const closeMenu = () => setMenuVisible(false);
@@ -45,93 +47,115 @@ const Header = () => {
     setShowLoginPage(false);
   };
 
+  const handleSyncErrorPress = () => {
+    Alert.alert("Sync Error", syncError || "An unknown error occurred during synchronization.");
+  };
+
   return (
-    <View>
-      <Appbar.Header style={styles.header}>
-        <Appbar.Content title="Casdoor" style={styles.title} />
-        <View style={styles.buttonWrapper}>
-          <Menu
-            visible={menuVisible}
-            onDismiss={closeMenu}
-            style={styles.menu}
-            contentStyle={styles.menuContent}
-            anchor={
-              <TouchableRipple
-                onPress={userInfo === null ? handleCasdoorLogin : openMenu}
-                style={styles.buttonContainer}
-                borderless={true}
-                borderRadius={20}
-              >
-                <View style={styles.buttonContent}>
-                  <Text style={styles.buttonText}>
-                    {userInfo === null ? "Login" : userInfo.name}
-                  </Text>
-                  {userInfo !== null && (
-                    <Avatar.Image
-                      size={24}
-                      source={{uri: userInfo.avatar}}
-                      style={styles.avatar}
-                    />
-                  )}
-                </View>
-              </TouchableRipple>
-            }
-          >
-            <Menu.Item onPress={handleMenuLogoutClicked} title="Logout" />
-          </Menu>
-        </View>
-      </Appbar.Header>
+    <Appbar.Header style={styles.header}>
+      <View style={styles.leftContainer}>
+        {userInfo !== null && syncError && (
+          <Appbar.Action
+            icon="sync-alert"
+            color="#E53935"
+            size={24}
+            onPress={handleSyncErrorPress}
+          />
+        )}
+      </View>
+      <Appbar.Content
+        title="Casdoor"
+        titleStyle={styles.titleText}
+        style={styles.titleContainer}
+      />
+      <View style={styles.rightContainer}>
+        <Menu
+          visible={menuVisible}
+          onDismiss={closeMenu}
+          style={styles.menu}
+          contentStyle={styles.menuContent}
+          anchor={
+            <TouchableRipple
+              onPress={userInfo === null ? handleCasdoorLogin : openMenu}
+              style={styles.buttonContainer}
+            >
+              <View style={styles.buttonContent}>
+                <Text style={styles.buttonText}>
+                  {userInfo === null ? "Login" : userInfo.name}
+                </Text>
+                {userInfo !== null && (
+                  <Avatar.Image
+                    size={24}
+                    source={{uri: userInfo.avatar}}
+                    style={styles.avatar}
+                  />
+                )}
+              </View>
+            </TouchableRipple>
+          }
+        >
+          <Menu.Item onPress={handleMenuLogoutClicked} title="Logout" />
+        </Menu>
+      </View>
       {showLoginPage && <CasdoorLoginPage onWebviewClose={handleHideLoginPage} />}
-    </View>
+    </Appbar.Header>
   );
 };
 
 const styles = StyleSheet.create({
   header: {
-    height: 40,
+    height: Platform.OS === "ios" ? 44 : 56,
+    paddingTop: Platform.OS === "ios" ? 0 : 4,
     justifyContent: "center",
-  },
-  title: {
-    position: "absolute",
-    left: 0,
-    right: 0,
     alignItems: "center",
   },
-  buttonWrapper: {
+  leftContainer: {
     position: "absolute",
-    right: 10,
+    left: 0,
     top: 0,
     bottom: 0,
     justifyContent: "center",
   },
+  rightContainer: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
+  titleContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  titleText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
   buttonContainer: {
     borderRadius: 20,
     overflow: "hidden",
+    marginRight: 8,
   },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   buttonText: {
-    ...Platform.select({
-      ios: {
-        fontSize: 16,
-      },
-      android: {
-        fontSize: 14,
-      },
-    }),
+    fontSize: 14,
     marginRight: 8,
     fontWeight: "bold",
   },
-  avatar: {
-    backgroundColor: "transparent",
-  },
   menu: {
-    marginTop: 40,
+    marginTop: Platform.OS === "android" ? 80 : 40,
   },
   menuContent: {
     backgroundColor: "#FFFFFF",
@@ -141,6 +165,9 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 3,
+  },
+  avatar: {
+    backgroundColor: "transparent",
   },
 });
 

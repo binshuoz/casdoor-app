@@ -84,3 +84,51 @@ export const updateMfaAccounts = async(serverUrl, owner, name, newMfaAccounts, t
     controller.abort();
   }
 };
+
+export const getPermissions = async(serverUrl, token, timeoutMs = TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const {signal} = controller;
+
+  try {
+    const response = await Promise.race([
+      fetch(`${serverUrl}/api/get-permissions-by-submitter?access_token=${token}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        signal,
+      }),
+      timeout(timeoutMs),
+    ]);
+
+    if (!response.ok) {
+      throw new Error(`Network error status: ${response.status}`);
+    }
+
+    const res = await response.json();
+    if (res.status !== "ok") {
+      throw new Error(`API error: ${res.msg || "Unknown error"}`);
+    }
+
+    const relevantPermission = res.data.find(permission =>
+      permission.actions.includes("Read") || permission.actions.includes("Write")
+    );
+
+    if (!relevantPermission) {
+      return {read: false, write: false};
+    }
+
+    return {
+      read: relevantPermission.actions.includes("Read"),
+      write: relevantPermission.actions.includes("Write"),
+    };
+
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("Request timed out");
+    }
+    throw error;
+  } finally {
+    controller.abort();
+  }
+};

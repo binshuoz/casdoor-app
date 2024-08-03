@@ -12,142 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {useCallback, useEffect, useState} from "react";
-import * as api from "./api";
+import {useEffect} from "react";
 import {useNetInfo} from "@react-native-community/netinfo";
-
-export const SYNC_STATUS = {
-  ADD: "add",
-  EDIT: "edit",
-  DELETE: "delete",
-};
-
-const preMergeSyncData = (toSyncData) => {
-  return toSyncData.reduce((mergedData, currentItem) => {
-    const existingItemIndex = mergedData.findIndex(
-      item => item.data.accountName === currentItem.data.accountName
-        && item.data.secretKey === currentItem.data.secretKey
-        && item.data.issuer === currentItem.data.issuer
-    );
-
-    if (existingItemIndex !== -1) {
-      const existingItem = mergedData[existingItemIndex];
-      switch (currentItem.status) {
-      case SYNC_STATUS.EDIT:
-        mergedData[existingItemIndex] = {
-          ...existingItem,
-          ...currentItem,
-          data: {...existingItem.data, ...currentItem.data},
-        };
-        break;
-      case SYNC_STATUS.DELETE:
-        mergedData.splice(existingItemIndex, 1);
-        break;
-      default:
-        break;
-      }
-    } else {
-      mergedData.push(currentItem);
-    }
-    return mergedData;
-  }, []);
-};
-
-const applySync = (serverAccountList, toSyncData) => {
-  return toSyncData.reduce((acc, syncItem) => {
-    switch (syncItem.status) {
-    case SYNC_STATUS.ADD:
-      if (!acc.some(account => account.accountName === syncItem.data.accountName && account.secretKey === syncItem.data.secretKey)) {
-        acc.push(syncItem.data);
-      }
-      break;
-    case SYNC_STATUS.EDIT:
-      const indexToEdit = acc.findIndex(account => account.accountName === syncItem.data.accountName && account.secretKey === syncItem.data.secretKey);
-      if (indexToEdit !== -1) {
-        acc[indexToEdit] = {...acc[indexToEdit], ...syncItem.data, accountName: syncItem.newAccountName};
-      }
-      break;
-    case SYNC_STATUS.DELETE:
-      return acc.filter(account => !(account.accountName === syncItem.data.accountName && account.secretKey === syncItem.data.secretKey));
-    default:
-      break;
-    }
-    return acc;
-  }, [...serverAccountList]);
-};
+import useSyncStore from "./useSyncStore";
 
 const useSync = (userInfo, token, casdoorServer) => {
-  const [toSyncData, setToSyncData] = useState([]);
-  const [syncSignal, setSyncSignal] = useState(false);
   const {isConnected} = useNetInfo();
-  const [canSync, setCanSync] = useState(false);
+  const {
+    canSync,
+    setCanSync,
+    syncSignal,
+    resetSyncSignal,
+    addToSyncData,
+    syncAccounts: syncAccountsFromStore,
+    triggerSync,
+  } = useSyncStore();
 
   useEffect(() => {
-    setCanSync(userInfo && casdoorServer && isConnected);
-  }, [userInfo, casdoorServer, isConnected]);
+    setCanSync(Boolean(userInfo && casdoorServer && isConnected));
+  }, [userInfo, casdoorServer, isConnected, setCanSync]);
 
-  const triggerSync = useCallback(() => {
+  useEffect(() => {
     if (canSync) {
-      setSyncSignal(true);
+      triggerSync();
     }
-  }, [canSync]);
+  }, [canSync, triggerSync]);
 
-  const resetSyncSignal = useCallback(() => {
-    setSyncSignal(false);
-  }, []);
-
-  const addToSyncData = useCallback((toSyncAccount, status, newAccountName = null) => {
-    setToSyncData(preMergeSyncData([...toSyncData, {
-      data: {
-        accountName: toSyncAccount.accountName,
-        issuer: toSyncAccount.issuer,
-        secretKey: toSyncAccount.secretKey,
-      },
-      status,
-      newAccountName: newAccountName || "",
-    }]));
-  }, []);
-
-  const syncAccounts = useCallback(async() => {
-    if (!canSync) {return {success: false};}
-
-    try {
-      const {mfaAccounts: serverAccountList} = await api.getMfaAccounts(
-        casdoorServer.serverUrl,
-        userInfo.owner,
-        userInfo.name,
-        token
-      );
-
-      if (!serverAccountList) {
-        return {success: false, error: "Failed to get accounts, make sure you have enabled MFA on casdoor"};
-      }
-
-      if (toSyncData.length === 0) {
-        return {success: true, accountList: serverAccountList};
-      }
-
-      const updatedServerAccountList = applySync(serverAccountList, toSyncData);
-
-      const {status} = await api.updateMfaAccounts(
-        casdoorServer.serverUrl,
-        userInfo.owner,
-        userInfo.name,
-        updatedServerAccountList,
-        token
-      );
-
-      if (status === "ok") {setToSyncData([]);}
-      return {success: status === "ok", accountList: updatedServerAccountList};
-
-    } catch (error) {
-      return {success: false, error: error.message};
-    }
-  }, [canSync, casdoorServer, userInfo, token, toSyncData]);
-
-  useEffect(() => {
-    if (canSync) {triggerSync();}
-  }, [canSync, toSyncData]);
+  const syncAccounts = async() => {
+    return syncAccountsFromStore(casdoorServer, userInfo, token);
+  };
 
   return {
     syncSignal,

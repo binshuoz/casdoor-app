@@ -17,7 +17,6 @@ import {Dimensions, RefreshControl, TouchableOpacity, View} from "react-native";
 import {Divider, IconButton, List, Modal, Portal, Text} from "react-native-paper";
 import {GestureHandlerRootView, Swipeable} from "react-native-gesture-handler";
 import {CountdownCircleTimer} from "react-native-countdown-circle-timer";
-import Toast from "react-native-root-toast";
 import {FlashList} from "@shopify/flash-list";
 
 import SearchBar from "./SearchBar";
@@ -28,7 +27,8 @@ import AvatarWithFallback from "./AvatarWithFallback";
 import Account from "./Account";
 import UserContext from "./UserContext";
 import CasdoorServerContext from "./CasdoorServerContext";
-import useSync, {SYNC_STATUS} from "./useSync";
+import useSync from "./useSync";
+import {SYNC_STATUS} from "./useSyncStore";
 
 const {width, height} = Dimensions.get("window");
 const REFRESH_INTERVAL = 10000;
@@ -68,8 +68,6 @@ export default function HomePage() {
           onUpdate
         ));
         setAccountList(newAccountList);
-      } else if (syncedAccounts.error) {
-        Toast.show(syncedAccounts.error, {position: -80});
       }
     } finally {
       isSyncing.current = false;

@@ -13,13 +13,11 @@
 // limitations under the License.
 
 import React, {useContext, useState} from "react";
-import {Alert, Dimensions, Text, View} from "react-native";
+import {Alert, ScrollView, Text, View} from "react-native";
 import {Button, IconButton, Portal, TextInput} from "react-native-paper";
 import DefaultCasdoorSdkConfig from "./DefaultCasdoorSdkConfig";
 import CasdoorServerContext from "./CasdoorServerContext";
 import PropTypes from "prop-types";
-
-const {width, height} = Dimensions.get("window");
 
 const EnterCasdoorSdkConfig = ({onClose, onWebviewClose}) => {
   EnterCasdoorSdkConfig.propTypes = {
@@ -49,8 +47,8 @@ const EnterCasdoorSdkConfig = ({onClose, onWebviewClose}) => {
   const handleSave = () => {
     if (
       !CasdoorSdkConfig.serverUrl ||
-        !CasdoorSdkConfig.clientId ||
-        !CasdoorSdkConfig.redirectPath
+      !CasdoorSdkConfig.clientId ||
+      !CasdoorSdkConfig.redirectPath
     ) {
       Alert.alert("Please fill in all the fields!");
       return;
@@ -70,9 +68,17 @@ const EnterCasdoorSdkConfig = ({onClose, onWebviewClose}) => {
 
   return (
     <Portal>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.content}>
-          <Text style={styles.title}>Casdoor server</Text>
+          <View style={styles.header}>
+            <Text style={styles.title}>Casdoor server</Text>
+            <IconButton
+              icon="close"
+              size={24}
+              onPress={closeConfigPage}
+              style={styles.closeButton}
+            />
+          </View>
           <TextInput
             label="Endpoint"
             value={CasdoorSdkConfig.serverUrl}
@@ -115,30 +121,22 @@ const EnterCasdoorSdkConfig = ({onClose, onWebviewClose}) => {
           >
               Use Casdoor Demo Site
           </Button>
-          <IconButton
-            icon="close"
-            size={24}
-            onPress={closeConfigPage}
-            style={styles.closeButton}
-          />
         </View>
-      </View>
+      </ScrollView>
     </Portal>
   );
 };
 
 const styles = {
-  container: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1,
+    width: "100%",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.5)",
-    padding: 20,
   },
   content: {
-    width: "100%",
-    height: height * 0.45,
-    maxWidth: width * 0.9,
+    width: "95%",
     borderRadius: 10,
     padding: 20,
     backgroundColor: "#F5F5F5",
@@ -147,13 +145,6 @@ const styles = {
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#333",
-    textAlign: "center",
   },
   input: {
     marginVertical: 10,
@@ -185,14 +176,28 @@ const styles = {
     borderColor: "#6200EE",
     borderWidth: 1,
     marginTop: 20,
+    paddingVertical: 10,
   },
   outlinedButtonLabel: {
     color: "#6200EE",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  header: {
+    position: "relative",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
   },
   closeButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    right: 0,
+    top: -8,
   },
 };
 
