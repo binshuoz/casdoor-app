@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import React, {useContext, useState} from "react";
-import {Alert, Text, View} from "react-native";
+import {Alert, Dimensions, Text, View} from "react-native";
 import {Button, IconButton, Portal, TextInput} from "react-native-paper";
 import DefaultCasdoorSdkConfig from "./DefaultCasdoorSdkConfig";
 import CasdoorServerContext from "./CasdoorServerContext";
 import PropTypes from "prop-types";
+
+const {width, height} = Dimensions.get("window");
 
 const EnterCasdoorSdkConfig = ({onClose, onWebviewClose}) => {
   EnterCasdoorSdkConfig.propTypes = {
@@ -130,13 +132,13 @@ const styles = {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     padding: 20,
   },
   content: {
     width: "100%",
-    height: "50%",
-    maxWidth: 400,
+    height: height * 0.45,
+    maxWidth: width * 0.9,
     borderRadius: 10,
     padding: 20,
     backgroundColor: "#F5F5F5",

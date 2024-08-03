@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import React, {useContext, useEffect, useRef, useState} from "react";
-import {Dimensions, FlatList, RefreshControl, TouchableOpacity, View} from "react-native";
+import {Dimensions, RefreshControl, TouchableOpacity, View} from "react-native";
 import {Divider, IconButton, List, Modal, Portal, Text} from "react-native-paper";
 import {GestureHandlerRootView, Swipeable} from "react-native-gesture-handler";
 import {CountdownCircleTimer} from "react-native-countdown-circle-timer";
 import Toast from "react-native-root-toast";
+import {FlashList} from "@shopify/flash-list";
 
 import SearchBar from "./SearchBar";
 import EnterAccountDetails from "./EnterAccountDetails";
@@ -177,9 +178,10 @@ export default function HomePage() {
   return (
     <View style={{flex: 1}}>
       <SearchBar onSearch={handleSearch} />
-      <FlatList
+      <FlashList
         data={searchQuery.trim() !== "" ? filteredData : accountList}
         keyExtractor={(item, index) => index.toString()}
+        estimatedItemSize={10}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -237,7 +239,7 @@ export default function HomePage() {
                       colors={["#004777", "#0072A0", "#0099CC", "#FF6600", "#CC3300", "#A30000"]}
                       colorsTime={[30, 24, 18, 12, 6, 0]}
                       size={60}
-                      onComplete={() => {item.generateAndSetToken(); return {shouldRepeat: true};}}
+                      onComplete={() => {item.generateAndSetToken(); return {shouldRepeat: true, delay: 0};}}
                       strokeWidth={5}
                     >
                       {({remainingTime}) => (
