@@ -2,7 +2,7 @@
   "expo": {
     "name": "casdoor-app",
     "slug": "casdoor-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,23 +17,23 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.casdoor.casdoorapp",
-      "buildNumber": "1.0.0"
+      "bundleIdentifier": "com.zzbs.casdoorapp",
+      "buildNumber": "1.0.1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "org.casdoor.casdoorapp",
-      "versionCode": 1
+      "package": "com.zzbs.casdoorapp",
+      "versionCode": 510010001
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "c02d2dfe-dd43-46ff-8a3e-e384fbc95b1d"
+        "projectId": "d0ddea88-9be6-46db-8aa5-ea6d80cef527"
       }
     },
     "plugins": [
@@ -46,6 +46,6 @@
         }
       ]
     ],
-    "owner": "casdoor"
+    "owner": "zzbs"
   }
 }
