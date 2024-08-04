@@ -19,13 +19,8 @@ import useSyncStore from "./useSyncStore";
 const useSync = (userInfo, token, casdoorServer) => {
   const {isConnected} = useNetInfo();
   const {
-    canSync,
-    setCanSync,
-    syncSignal,
-    resetSyncSignal,
-    addToSyncData,
-    syncAccounts: syncAccountsFromStore,
-    triggerSync,
+    canSync, setCanSync, syncSignal, resetSyncSignal, addToSyncData,
+    syncAccounts: syncAccountsFromStore, triggerSync,
   } = useSyncStore();
 
   useEffect(() => {

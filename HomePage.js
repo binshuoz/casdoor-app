@@ -17,21 +17,19 @@ import {Dimensions, RefreshControl, TouchableOpacity, View} from "react-native";
 import {Divider, IconButton, List, Modal, Portal, Text} from "react-native-paper";
 import {GestureHandlerRootView, Swipeable} from "react-native-gesture-handler";
 import {CountdownCircleTimer} from "react-native-countdown-circle-timer";
+import {useNetInfo} from "@react-native-community/netinfo";
 import {FlashList} from "@shopify/flash-list";
 
+import useTotpStore from "./useTotpStore";
 import SearchBar from "./SearchBar";
 import EnterAccountDetails from "./EnterAccountDetails";
 import ScanQRCode from "./ScanQRCode";
 import EditAccountDetails from "./EditAccountDetails";
 import AvatarWithFallback from "./AvatarWithFallback";
-import Account from "./Account";
-import UserContext from "./UserContext";
 import CasdoorServerContext from "./CasdoorServerContext";
-import useSync from "./useSync";
-import {SYNC_STATUS} from "./useSyncStore";
+import UserContext from "./UserContext";
 
 const {width, height} = Dimensions.get("window");
-const REFRESH_INTERVAL = 10000;
 const OFFSET_X = width * 0.45;
 const OFFSET_Y = height * 0.2;
 
@@ -39,56 +37,53 @@ export default function HomePage() {
   const [isPlusButton, setIsPlusButton] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
   const [showEnterAccountModal, setShowEnterAccountModal] = useState(false);
-  const [accountList, setAccountList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredData, setFilteredData] = useState(accountList);
+  const [filteredData, setFilteredData] = useState(accounts);
   const [showScanner, setShowScanner] = useState(false);
   const [showEditAccountModal, setShowEditAccountModal] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const {isConnected} = useNetInfo();
+  const [canSync, setCanSync] = useState(false);
 
   const swipeableRef = useRef(null);
-  const isSyncing = useRef(false);
-
   const {userInfo, token} = useContext(UserContext);
   const {casdoorServer} = useContext(CasdoorServerContext);
-  const {syncAccounts, syncSignal, resetSyncSignal, addToSyncData} = useSync(userInfo, token, casdoorServer);
+  const {accounts, createAccount, deleteAccount, updateAccount, syncWithCloud, updateToken, calculateCountdown} = useTotpStore();
 
-  const handleSync = async() => {
-    if (isSyncing.current) {return;}
-    isSyncing.current = true;
-    try {
-      const syncedAccounts = await syncAccounts();
-      if (syncedAccounts.success && syncedAccounts.accountList) {
-        accountList.forEach(account => account.deleteAccount());
-        const newAccountList = syncedAccounts.accountList.map(account => new Account(
-          account.accountName,
-          account.issuer,
-          account.secretKey,
-          onUpdate
-        ));
-        setAccountList(newAccountList);
-      }
-    } finally {
-      isSyncing.current = false;
-      setRefreshing(false);
-      resetSyncSignal();
-    }
+  useEffect(() => {
+    setCanSync(isConnected && userInfo && casdoorServer);
+  }, [isConnected, userInfo, casdoorServer]);
+
+  useEffect(() => {
+    setFilteredData(accounts);
+  }, [accounts]);
+
+  const onRefresh = async() => {
+    setRefreshing(true);
+    if (canSync) {await syncWithCloud(userInfo, casdoorServer, token);}
+    setRefreshing(false);
   };
 
-  useEffect(() => {
-    if ((syncSignal || refreshing) && !isSyncing.current) {
-      handleSync();
-    }
-  }, [syncSignal, refreshing]);
+  const handleAddAccount = async(accountData) => {
+    await createAccount(accountData);
+    closeEnterAccountModal();
+  };
 
-  useEffect(() => {
-    const timer = setInterval(handleSync, REFRESH_INTERVAL);
-    return () => clearInterval(timer);
-  }, [handleSync]);
+  const handleDeleteAccount = async(id) => {
+    await deleteAccount(id);
+  };
 
-  const onRefresh = () => {
-    setRefreshing(true);
+  const handleEditAccount = (account) => {
+    closeSwipeableMenu();
+    setPlaceholder(account.accountName);
+    setShowEditAccountModal(true);
+  };
+
+  const onAccountEdit = async(id, newAccountName) => {
+    await updateAccount(id, {newAccountName});
+    setPlaceholder("");
+    closeEditAccountModal();
   };
 
   const closeEditAccountModal = () => setShowEditAccountModal(false);
@@ -119,46 +114,6 @@ export default function HomePage() {
 
   const closeEnterAccountModal = () => setShowEnterAccountModal(false);
 
-  const onUpdate = () => setAccountList(prev => [...prev]);
-
-  const handleAddAccount = (accountData) => {
-    const newAccount = new Account(accountData.accountName, accountData.issuer, accountData.secretKey, onUpdate);
-    addToSyncData(newAccount, SYNC_STATUS.ADD);
-    newAccount.token = newAccount.generateToken();
-
-    setAccountList(prev => [...prev, newAccount]);
-    closeEnterAccountModal();
-  };
-
-  const handleDeleteAccount = (accountName) => {
-    const accountToDelete = accountList.find(account => account.accountName === accountName);
-    if (accountToDelete) {
-      accountToDelete.deleteAccount();
-      addToSyncData(accountToDelete, SYNC_STATUS.DELETE);
-    }
-    setAccountList(prevList => prevList.filter(account => account.accountName !== accountName));
-  };
-
-  const handleEditAccount = (accountName) => {
-    closeSwipeableMenu();
-    const accountToEdit = accountList.find(account => account.accountName === accountName);
-    if (accountToEdit) {
-      setPlaceholder(accountToEdit.accountName);
-      setShowEditAccountModal(true);
-      accountToEdit.setEditingStatus(true);
-    }
-  };
-
-  const onAccountEdit = (newAccountName) => {
-    const accountToEdit = accountList.find(account => account.getEditStatus() === true);
-    if (accountToEdit) {
-      addToSyncData(accountToEdit, SYNC_STATUS.EDIT, newAccountName);
-      accountToEdit.setAccountName(newAccountName);
-    }
-    setPlaceholder("");
-    closeEditAccountModal();
-  };
-
   const closeSwipeableMenu = () => {
     if (swipeableRef.current) {
       swipeableRef.current.close();
@@ -168,8 +123,8 @@ export default function HomePage() {
   const handleSearch = (query) => {
     setSearchQuery(query);
     setFilteredData(query.trim() !== ""
-      ? accountList.filter(item => item.accountName.toLowerCase().includes(query.toLowerCase()))
-      : accountList
+      ? accounts.filter(item => item.accountName.toLowerCase().includes(query.toLowerCase()))
+      : accounts
     );
   };
 
@@ -177,8 +132,8 @@ export default function HomePage() {
     <View style={{flex: 1}}>
       <SearchBar onSearch={handleSearch} />
       <FlashList
-        data={searchQuery.trim() !== "" ? filteredData : accountList}
-        keyExtractor={(item, index) => index.toString()}
+        data={searchQuery.trim() !== "" ? filteredData : accounts}
+        keyExtractor={(item) => item.id.toString()}
         estimatedItemSize={10}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -187,17 +142,17 @@ export default function HomePage() {
           <GestureHandlerRootView>
             <Swipeable
               ref={swipeableRef}
-              renderRightActions={(progress, dragX) => (
+              renderRightActions={() => (
                 <View style={{flexDirection: "row", alignItems: "center"}}>
                   <TouchableOpacity
                     style={{height: 70, width: 80, backgroundColor: "#E6DFF3", alignItems: "center", justifyContent: "center"}}
-                    onPress={handleEditAccount.bind(this, item.accountName)}
+                    onPress={() => handleEditAccount(item)}
                   >
                     <Text>Edit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{height: 70, width: 80, backgroundColor: "#FFC0CB", alignItems: "center", justifyContent: "center"}}
-                    onPress={handleDeleteAccount.bind(this, item.accountName)}
+                    onPress={() => handleDeleteAccount(item.id)}
                   >
                     <Text>Delete</Text>
                   </TouchableOpacity>
@@ -216,7 +171,7 @@ export default function HomePage() {
                     <Text variant="headlineSmall" style={{fontWeight: "bold"}}>{item.token}</Text>
                   </View>
                 }
-                left={(props) => (
+                left={() => (
                   <AvatarWithFallback
                     source={{uri: item.issuer ? `https://cdn.casbin.org/img/social_${item.issuer.toLowerCase()}.png` : "https://cdn.casbin.org/img/social_default.png"}}
                     fallbackSource={{uri: "https://cdn.casbin.org/img/social_default.png"}}
@@ -228,16 +183,16 @@ export default function HomePage() {
                     }}
                   />
                 )}
-                right={(props) => (
+                right={() => (
                   <View style={{justifyContent: "center", alignItems: "center"}}>
                     <CountdownCircleTimer
                       isPlaying={true}
                       duration={30}
-                      initialRemainingTime={item.calculateCountdown()}
+                      initialRemainingTime={calculateCountdown()}
                       colors={["#004777", "#0072A0", "#0099CC", "#FF6600", "#CC3300", "#A30000"]}
                       colorsTime={[30, 24, 18, 12, 6, 0]}
                       size={60}
-                      onComplete={() => {item.generateAndSetToken(); return {shouldRepeat: true, delay: 0};}}
+                      onComplete={() => {updateToken(item.id); return {shouldRepeat: true, delay: 0};}}
                       strokeWidth={5}
                     >
                       {({remainingTime}) => (
